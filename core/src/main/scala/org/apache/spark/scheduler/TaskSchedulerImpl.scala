@@ -281,7 +281,9 @@ private[spark] class TaskSchedulerImpl(
     // Mark each slave as alive and remember its hostname
     // Also track if new executor is added
     var newExecAvail = false
+    val loadsByExecutorId = HashMap[String, Double]()
     for (o <- offers) {
+      loadsByExecutorId(o.executorId) = o.cpuLoad
       executorIdToHost(o.executorId) = o.host
       executorIdToTaskCount.getOrElseUpdate(o.executorId, 0)
       if (!executorsByHost.contains(o.host)) {
@@ -295,10 +297,10 @@ private[spark] class TaskSchedulerImpl(
     }
 
     // Randomly shuffle offers to avoid always placing tasks on the same set of workers.
-    val shuffledOffers = Random.shuffle(offers)
+    val sortedOffers = offers.sortBy { offer => offer.cpuLoad }
     // Build a list of tasks to assign to each worker.
-    val tasks = shuffledOffers.map(o => new ArrayBuffer[TaskDescription](o.cores))
-    val availableCpus = shuffledOffers.map(o => o.cores).toArray
+    val tasks = sortedOffers.map(o => new ArrayBuffer[TaskDescription](o.cores))
+    val availableCpus = sortedOffers.map(o => o.cores).toArray
     val sortedTaskSets = rootPool.getSortedTaskSetQueue
     for (taskSet <- sortedTaskSets) {
       logDebug("parentName: %s, name: %s, runningTasks: %s".format(
@@ -309,13 +311,13 @@ private[spark] class TaskSchedulerImpl(
     }
 
     // Take each TaskSet in our scheduling order, and then offer it each node in increasing order
-    // of locality levels so that it gets a chance to launch local tasks on all of them.
+    // of locality levels so that it gets a chance to launch local tasks on all of them.gi
     // NOTE: the preferredLocality order: PROCESS_LOCAL, NODE_LOCAL, NO_PREF, RACK_LOCAL, ANY
     var launchedTask = false
     for (taskSet <- sortedTaskSets; maxLocality <- taskSet.myLocalityLevels) {
       do {
         launchedTask = resourceOfferSingleTaskSet(
-            taskSet, maxLocality, shuffledOffers, availableCpus, tasks)
+            taskSet, maxLocality, sortedOffers, availableCpus, tasks)
       } while (launchedTask)
     }
 
