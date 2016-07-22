@@ -297,13 +297,13 @@ private[spark] class TaskSchedulerImpl(
     }
 
     val sortedOffers = offers.sortBy { offer => offer.cpuLoad }
-    logDebug("sortedOffers: %s".format(sortedOffers.toString()))
+    logDebug("sortedOffers: %s".format(sortedOffers.mkString("/")))
     // Build a list of tasks to assign to each worker.
     val tasks = sortedOffers.map(o => new ArrayBuffer[TaskDescription](o.cores))
     val availableCpus = sortedOffers
       .map{offer => Math.round(offer.cores - offer.cpuLoad).toInt }
       .toArray
-    logDebug("availableCpus: %s".format(availableCpus.toString()))
+    logDebug("availableCpus: %s".format(availableCpus.mkString("/")))
     val sortedTaskSets = rootPool.getSortedTaskSetQueue
     for (taskSet <- sortedTaskSets) {
       logDebug("parentName: %s, name: %s, runningTasks: %s".format(
