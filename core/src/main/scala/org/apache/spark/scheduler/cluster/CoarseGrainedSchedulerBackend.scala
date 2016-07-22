@@ -191,7 +191,7 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
     }
 
     def cpuLoadFor(id: String, executorData: ExecutorData): Double =
-      if (id == "192.168.56.102") 0 else 1
+      if (id == "192.168.56.101") 0 else 1
 
     // Make fake resource offers on all executors
     private def makeOffers() {

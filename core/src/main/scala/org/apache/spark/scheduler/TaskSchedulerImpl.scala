@@ -296,12 +296,14 @@ private[spark] class TaskSchedulerImpl(
       }
     }
 
-    // Randomly shuffle offers to avoid always placing tasks on the same set of workers.
     val sortedOffers = offers.sortBy { offer => offer.cpuLoad }
+    logDebug("sortedOffers: %s".format(sortedOffers.toString()))
     // Build a list of tasks to assign to each worker.
     val tasks = sortedOffers.map(o => new ArrayBuffer[TaskDescription](o.cores))
-//    val availableCpus = sortedOffers.map(o => o.cores).toArray
-    val availableCpus = sortedOffers.map{_ => 1}.toArray
+    val availableCpus = sortedOffers
+      .map{offer => Math.round(offer.cores - offer.cpuLoad).toInt }
+      .toArray
+    logDebug("availableCpus: %s".format(availableCpus.toString()))
     val sortedTaskSets = rootPool.getSortedTaskSetQueue
     for (taskSet <- sortedTaskSets) {
       logDebug("parentName: %s, name: %s, runningTasks: %s".format(
