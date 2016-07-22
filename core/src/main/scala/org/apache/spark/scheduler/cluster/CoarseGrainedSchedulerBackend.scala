@@ -190,16 +190,18 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
         context.reply(sparkProperties)
     }
 
-    def cpuLoadFor(id: String, executorData: ExecutorData): Double =
-      if (id == "192.168.56.102") 0 else 1
+    def cpuLoadFor(host: String, executorData: ExecutorData): Double =
+      if (host == "192.168.56.102") 0 else 1
 
     // Make fake resource offers on all executors
     private def makeOffers() {
       // Filter out executors under killing
       val activeExecutors = executorDataMap.filterKeys(executorIsAlive)
       val workOffers = activeExecutors.map { case (id, executorData) =>
+        logDebug("execHost: %s".format(executorData.executorHost))
+        logDebug("execHostRpc: %s".format(executorData.executorAddress.host))
         new WorkerOffer(id, executorData.executorHost, executorData.freeCores,
-          cpuLoadFor(id, executorData))
+            cpuLoadFor(executorData.executorHost, executorData))
       }.toSeq
       launchTasks(scheduler.resourceOffers(workOffers))
     }
