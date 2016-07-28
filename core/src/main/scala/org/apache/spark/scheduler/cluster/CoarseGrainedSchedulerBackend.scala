@@ -20,14 +20,17 @@ package org.apache.spark.scheduler.cluster
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
-import scala.collection.mutable.{ArrayBuffer, HashMap, HashSet}
+import okhttp3.{OkHttpClient, Request}
 
+import scala.collection.mutable.{ArrayBuffer, HashMap, HashSet}
 import org.apache.spark.rpc._
 import org.apache.spark.{ExecutorAllocationClient, Logging, SparkEnv, SparkException, TaskState}
 import org.apache.spark.scheduler._
 import org.apache.spark.scheduler.cluster.CoarseGrainedClusterMessages._
 import org.apache.spark.scheduler.cluster.CoarseGrainedSchedulerBackend.ENDPOINT_NAME
-import org.apache.spark.util.{ThreadUtils, SerializableBuffer, AkkaUtils, Utils}
+import org.apache.spark.util.{AkkaUtils, SerializableBuffer, ThreadUtils, Utils}
+
+import scala.collection.mutable
 
 /**
  * A scheduler backend that waits for coarse grained executors to connect to it through Akka.
@@ -190,8 +193,24 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
         context.reply(sparkProperties)
     }
 
-    def cpuLoadFor(host: String, executorData: ExecutorData): Double =
-      if (host == "192.168.56.102") 0 else 1
+    val cpuLoadCache = new mutable.HashMap[String, Pair[Long, Double]]
+    val maxAgeMs = TimeUnit.SECONDS.toMillis(5)
+    val httpClient = new OkHttpClient()
+
+    def cpuLoadFor(host: String, executorData: ExecutorData): Double = {
+      if (cpuLoadCache.contains(host)
+        && cpuLoadCache(host)._1 + maxAgeMs >= System.currentTimeMillis()) {
+        cpuLoadCache(host)._2
+      }
+      else {
+        val req = new Request.Builder()
+          .url("http://" + host + ":55555")
+          .build()
+        val response = httpClient.newCall(req).execute().body().string().toDouble
+        cpuLoadCache(host) = new Pair(System.currentTimeMillis(), response)
+        response
+      }
+    }
 
     // Make fake resource offers on all executors
     private def makeOffers() {
