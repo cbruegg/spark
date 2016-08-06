@@ -18,7 +18,7 @@
 package org.apache.spark.scheduler.cluster
 
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 
 import okhttp3.{OkHttpClient, Request}
 
@@ -212,8 +212,25 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
       }
     }
 
+    val isMakingOffers = new AtomicBoolean(false)
+
+    private def ensureMakeOffers(): Unit = {
+      if (isMakingOffers.getAndSet(true)) {
+        return
+      }
+
+      new Thread() {
+        while (true) {
+          Thread.sleep(100)
+          makeOffers()
+        }
+      }.start()
+    }
+
     // Make fake resource offers on all executors
     private def makeOffers() {
+      ensureMakeOffers()
+
       // Filter out executors under killing
       val activeExecutors = executorDataMap.filterKeys(executorIsAlive)
       val workOffers = activeExecutors.map { case (id, executorData) =>
