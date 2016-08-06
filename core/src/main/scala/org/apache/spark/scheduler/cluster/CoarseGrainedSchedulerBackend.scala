@@ -219,7 +219,9 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
         return
       }
 
+      logDebug("Starting offer thread.")
       new Thread() {
+        logDebug("Offer thread started.")
         while (true) {
           Thread.sleep(100)
           makeOffers()
@@ -231,6 +233,7 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
     private def makeOffers() {
       ensureMakeOffers()
 
+      logDebug("Making offers.")
       // Filter out executors under killing
       val activeExecutors = executorDataMap.filterKeys(executorIsAlive)
       val workOffers = activeExecutors.map { case (id, executorData) =>
