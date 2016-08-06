@@ -219,7 +219,7 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
       val workOffers = activeExecutors.map { case (id, executorData) =>
         logDebug("execHost: %s".format(executorData.executorHost))
         logDebug("execHostRpc: %s".format(executorData.toString))
-        new WorkerOffer(id, executorData.executorHost, executorData.freeCores,
+        new WorkerOffer(id, executorData.executorHost, executorData.totalCores,
             cpuLoadFor(executorData.executorHost, executorData))
       }.toSeq
       launchTasks(scheduler.resourceOffers(workOffers))
