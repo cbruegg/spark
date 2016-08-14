@@ -252,6 +252,7 @@ private[spark] class TaskSchedulerImpl(
         logDebug("%d >= %d".format(availableCpus(i), CPUS_PER_TASK))
         try {
           for (task <- taskSet.resourceOffer(execId, host, maxLocality)) {
+            logDebug("Got offered task " + task.name)
             tasks(i) += task
             val tid = task.taskId
             taskIdToTaskSetManager(tid) = taskSet

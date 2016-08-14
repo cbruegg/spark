@@ -441,6 +441,7 @@ private[spark] class TaskSetManager(
           // Found a task; do some bookkeeping and return a task description
           val task = tasks(index)
           val taskId = sched.newTaskId()
+          logDebug("Dequeued task " + task)
           // Do various bookkeeping
           copiesRunning(index) += 1
           val attemptNum = taskAttempts(index).size
@@ -475,19 +476,20 @@ private[spark] class TaskSetManager(
               s"${TaskSetManager.TASK_SIZE_TO_WARN_KB} KB.")
           }
           addRunningTask(taskId)
+          logDebug("Added " + taskId + " to running tasks")
 
           // We used to log the time it takes to serialize the task, but task size is already
           // a good proxy to task serialization time.
           // val timeTaken = clock.getTime() - startTime
           val taskName = s"task ${info.id} in stage ${taskSet.id}"
-          logInfo(s"Starting $taskName (TID $taskId, $host, partition ${task.partitionId}," +
+          logDebug(s"Starting $taskName (TID $taskId, $host, partition ${task.partitionId}," +
             s"$taskLocality, ${serializedTask.limit} bytes)")
 
           sched.dagScheduler.taskStarted(task, info)
           return Some(new TaskDescription(taskId = taskId, attemptNumber = attemptNum, execId,
             taskName, index, serializedTask))
         }
-        case _ =>
+        case _ => logDebug("No task for dequeuing found.")
       }
     }
     None
