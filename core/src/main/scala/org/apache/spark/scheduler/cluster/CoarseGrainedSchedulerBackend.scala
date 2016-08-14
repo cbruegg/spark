@@ -233,7 +233,7 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
 
     // Make fake resource offers on all executors
     private def makeOffers() {
-      ensureMakeOffers()
+//      ensureMakeOffers()
 
       logDebug("Making offers.")
       // Filter out executors under killing
