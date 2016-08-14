@@ -71,7 +71,7 @@ private[spark] class TaskSchedulerImpl(
   val STARVATION_TIMEOUT_MS = conf.getTimeAsMs("spark.starvation.timeout", "15s")
 
   // CPUs to request per task
-  val CPUS_PER_TASK = conf.getDouble("spark.task.cpus", 0.1)
+  val CPUS_PER_TASK = conf.getInt("spark.task.cpus", 1)
 
   // TaskSetManagers are not thread safe, so any access to one should be synchronized
   // on this class.
@@ -244,10 +244,11 @@ private[spark] class TaskSchedulerImpl(
       availableCpus: Array[Int],
       tasks: Seq[ArrayBuffer[TaskDescription]]) : Boolean = {
     var launchedTask = false
+    var launchedTasks = 0
     for (i <- 0 until shuffledOffers.size) {
       val execId = shuffledOffers(i).executorId
       val host = shuffledOffers(i).host
-      if (availableCpus(i) >= CPUS_PER_TASK) {
+      if (availableCpus(i) >= CPUS_PER_TASK || launchedTasks > 1) {
         logDebug("%d >= %d".format(availableCpus(i), CPUS_PER_TASK))
         try {
           for (task <- taskSet.resourceOffer(execId, host, maxLocality)) {
@@ -260,6 +261,11 @@ private[spark] class TaskSchedulerImpl(
             availableCpus(i) -= CPUS_PER_TASK
             assert(availableCpus(i) >= 0)
             launchedTask = true
+            launchedTasks = launchedTasks + 1
+
+            if (launchedTasks > 9) { // Launch up to 10 tasks per available CPU
+              launchedTasks = 0
+            }
           }
         } catch {
           case e: TaskNotSerializableException =>
