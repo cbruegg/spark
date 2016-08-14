@@ -223,9 +223,9 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
       new Thread() {
         logDebug("Offer thread started.")
         while (true) {
-          Thread.sleep(100)
+          Thread.sleep(500)
           if (true) {
-            makeOffers()
+            self.send(ReviveOffers)
           }
         }
       }.start()
