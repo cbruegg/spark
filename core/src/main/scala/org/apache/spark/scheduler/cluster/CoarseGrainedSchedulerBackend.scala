@@ -224,10 +224,11 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
         logDebug("Offer thread started.")
         while (true) {
           Thread.sleep(100)
-          if (false)
-          makeOffers()
+          if (false) {
+            makeOffers()
+          }
         }
-      }.start()
+      }
     }
 
     // Make fake resource offers on all executors
