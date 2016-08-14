@@ -248,6 +248,7 @@ private[spark] class TaskSchedulerImpl(
       val execId = shuffledOffers(i).executorId
       val host = shuffledOffers(i).host
       if (availableCpus(i) >= CPUS_PER_TASK) {
+        logDebug("%d >= %d".format(availableCpus(i), CPUS_PER_TASK))
         try {
           for (task <- taskSet.resourceOffer(execId, host, maxLocality)) {
             tasks(i) += task
@@ -267,6 +268,8 @@ private[spark] class TaskSchedulerImpl(
             // task sets to be submitted.
             return launchedTask
         }
+      } else {
+        logDebug("No CPU available.")
       }
     }
     return launchedTask
@@ -319,9 +322,11 @@ private[spark] class TaskSchedulerImpl(
     val initialTasks = sortedTaskSets.size
     for (taskSet <- sortedTaskSets; maxLocality <- taskSet.myLocalityLevels) {
       do {
+        logDebug("Offering taskSet %s".format(taskSet.name))
         launchedTask = resourceOfferSingleTaskSet(
             taskSet, maxLocality, sortedOffers, availableCpus, tasks)
         if (launchedTask) {
+          logDebug("Launched it.")
           launchedTasks = launchedTasks + 1
         }
       } while (launchedTask)
