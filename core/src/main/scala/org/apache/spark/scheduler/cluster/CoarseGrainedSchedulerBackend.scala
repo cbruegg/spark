@@ -224,7 +224,7 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
         logDebug("Offer thread started.")
         while (true) {
           Thread.sleep(100)
-          if (false) {
+          if (true) {
             makeOffers()
           }
         }
@@ -233,7 +233,7 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
 
     // Make fake resource offers on all executors
     private def makeOffers() {
-      ensureMakeOffers()
+//      ensureMakeOffers()
 
       logDebug("Making offers.")
       // Filter out executors under killing
