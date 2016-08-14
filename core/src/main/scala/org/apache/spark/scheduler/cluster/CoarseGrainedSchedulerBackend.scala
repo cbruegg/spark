@@ -214,7 +214,7 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
 
     val isMakingOffers = new AtomicBoolean(false)
 
-    private def ensureMakeOffers(): Unit = {
+    private def ensureMakeOffers() {
       if (isMakingOffers.getAndSet(true)) {
         return
       }
@@ -224,11 +224,9 @@ class CoarseGrainedSchedulerBackend(scheduler: TaskSchedulerImpl, val rpcEnv: Rp
         logDebug("Offer thread started.")
         while (true) {
           Thread.sleep(100)
-          if (false) {
-            makeOffers()
-          }
+          makeOffers()
         }
-      }
+      }.start()
     }
 
     // Make fake resource offers on all executors
