@@ -436,7 +436,7 @@ private[spark] class TaskSetManager(
         }
       }
 
-      dequeueTask(execId, host, allowedLocality) match {
+      dequeueTask(execId, host, TaskLocality.ANY) match {
         case Some((index, taskLocality, speculative)) => {
           // Found a task; do some bookkeeping and return a task description
           val task = tasks(index)
