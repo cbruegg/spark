@@ -715,6 +715,8 @@ private[spark] class BlockManager(
       tellMaster: Boolean = true,
       effectiveStorageLevel: Option[StorageLevel] = None)
     : Seq[(BlockId, BlockStatus)] = {
+    logInfo(s"TRANSFER: doPutBytes(blockId=$blockId, data=$data, level=$level, " +
+      s"tellMaster=$tellMaster, effectiveStorageLevel=$effectiveStorageLevel")
 
     require(blockId != null, "BlockId is null")
     require(level != null && level.isValid, "StorageLevel is null or invalid")
