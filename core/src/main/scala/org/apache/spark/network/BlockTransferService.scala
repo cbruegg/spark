@@ -18,12 +18,14 @@
 package org.apache.spark.network
 
 import java.io.Closeable
+import java.net.InetAddress
 import java.nio.ByteBuffer
+
+import org.apache.spark.SparkContext
 
 import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
-
 import org.apache.spark.internal.Logging
 import org.apache.spark.network.buffer.{ManagedBuffer, NioManagedBuffer}
 import org.apache.spark.network.shuffle.{BlockFetchingListener, ShuffleClient}
@@ -34,73 +36,78 @@ private[spark]
 abstract class BlockTransferService extends ShuffleClient with Closeable with Logging {
 
   /**
-   * Initialize the transfer service by giving it the BlockDataManager that can be used to fetch
-   * local blocks or put local blocks.
-   */
+    * Initialize the transfer service by giving it the BlockDataManager that can be used to fetch
+    * local blocks or put local blocks.
+    */
   def init(blockDataManager: BlockDataManager): Unit
 
   /**
-   * Tear down the transfer service.
-   */
+    * Tear down the transfer service.
+    */
   def close(): Unit
 
   /**
-   * Port number the service is listening on, available only after [[init]] is invoked.
-   */
+    * Port number the service is listening on, available only after [[init]] is invoked.
+    */
   def port: Int
 
   /**
-   * Host name the service is listening on, available only after [[init]] is invoked.
-   */
+    * Host name the service is listening on, available only after [[init]] is invoked.
+    */
   def hostName: String
 
   /**
-   * Fetch a sequence of blocks from a remote node asynchronously,
-   * available only after [[init]] is invoked.
-   *
-   * Note that this API takes a sequence so the implementation can batch requests, and does not
-   * return a future so the underlying implementation can invoke onBlockFetchSuccess as soon as
-   * the data of a block is fetched, rather than waiting for all blocks to be fetched.
-   */
+    * Fetch a sequence of blocks from a remote node asynchronously,
+    * available only after [[init]] is invoked.
+    *
+    * Note that this API takes a sequence so the implementation can batch requests, and does not
+    * return a future so the underlying implementation can invoke onBlockFetchSuccess as soon as
+    * the data of a block is fetched, rather than waiting for all blocks to be fetched.
+    */
   override def fetchBlocks(
-      host: String,
-      port: Int,
-      execId: String,
-      blockIds: Array[String],
-      listener: BlockFetchingListener): Unit
+                            host: String,
+                            port: Int,
+                            execId: String,
+                            blockIds: Array[String],
+                            listener: BlockFetchingListener): Unit
 
   /**
-   * Upload a single block to a remote node, available only after [[init]] is invoked.
-   */
+    * Upload a single block to a remote node, available only after [[init]] is invoked.
+    */
   def uploadBlock(
-      hostname: String,
-      port: Int,
-      execId: String,
-      blockId: BlockId,
-      blockData: ManagedBuffer,
-      level: StorageLevel,
-      classTag: ClassTag[_]): Future[Unit]
+                   hostname: String,
+                   port: Int,
+                   execId: String,
+                   blockId: BlockId,
+                   blockData: ManagedBuffer,
+                   level: StorageLevel,
+                   classTag: ClassTag[_]): Future[Unit]
 
   def uploadBlockWrapper(
-      hostname: String,
-      port: Int,
-      execId: String,
-      blockId: BlockId,
-      blockData: ManagedBuffer,
-      level: StorageLevel,
-      classTag: ClassTag[_]): Future[Unit] = {
-    logInfo(s"TRANSFER: uploadBlockWrapper(hostname=$hostname, port=$port, execId=$execId, " +
+                          host: String,
+                          trgPort: Int,
+                          execId: String,
+                          blockId: BlockId,
+                          blockData: ManagedBuffer,
+                          level: StorageLevel,
+                          classTag: ClassTag[_]): Future[Unit] = {
+    logInfo(s"TRANSFER: uploadBlockWrapper(hostname=$host, port=$trgPort, execId=$execId, " +
       s"blockId=$blockId, blockData=$blockData, level=$level, classTag=$classTag)")
-    uploadBlock(hostname, port, execId, blockId, blockData, level, classTag)
+    PaneClientManager.notifyFlow(InetAddress.getByName(hostName), port,
+      InetAddress.getByName(host), trgPort)
+    uploadBlock(host, port, execId, blockId, blockData, level, classTag)
   }
 
   /**
-   * A special case of [[fetchBlocks]], as it fetches only one block and is blocking.
-   *
-   * It is also only available after [[init]] is invoked.
-   */
-  def fetchBlockSync(host: String, port: Int, execId: String, blockId: String): ManagedBuffer = {
-    logInfo(s"TRANSFER: fetchBlockSync(host=$host, port=$port, execId=$execId, blockId=$blockId)")
+    * A special case of [[fetchBlocks]], as it fetches only one block and is blocking.
+    *
+    * It is also only available after [[init]] is invoked.
+    */
+  def fetchBlockSync(host: String, srcPort: Int, execId: String, blockId: String): ManagedBuffer = {
+    logInfo(s"TRANSFER: fetchBlockSync(host=$host, srcPort=$srcPort, " +
+      s"execId=$execId, blockId=$blockId)")
+    PaneClientManager.notifyFlow(InetAddress.getByName(host), srcPort,
+      InetAddress.getByName(hostName), port)
 
     // A monitor for the thread to wait on.
     val result = Promise[ManagedBuffer]()
@@ -109,6 +116,7 @@ abstract class BlockTransferService extends ShuffleClient with Closeable with Lo
         override def onBlockFetchFailure(blockId: String, exception: Throwable): Unit = {
           result.failure(exception)
         }
+
         override def onBlockFetchSuccess(blockId: String, data: ManagedBuffer): Unit = {
           val ret = ByteBuffer.allocate(data.size.toInt)
           ret.put(data.nioByteBuffer())
@@ -120,19 +128,19 @@ abstract class BlockTransferService extends ShuffleClient with Closeable with Lo
   }
 
   /**
-   * Upload a single block to a remote node, available only after [[init]] is invoked.
-   *
-   * This method is similar to [[uploadBlock]], except this one blocks the thread
-   * until the upload finishes.
-   */
+    * Upload a single block to a remote node, available only after [[init]] is invoked.
+    *
+    * This method is similar to [[uploadBlock]], except this one blocks the thread
+    * until the upload finishes.
+    */
   def uploadBlockSync(
-      hostname: String,
-      port: Int,
-      execId: String,
-      blockId: BlockId,
-      blockData: ManagedBuffer,
-      level: StorageLevel,
-      classTag: ClassTag[_]): Unit = {
+                       hostname: String,
+                       port: Int,
+                       execId: String,
+                       blockId: BlockId,
+                       blockData: ManagedBuffer,
+                       level: StorageLevel,
+                       classTag: ClassTag[_]): Unit = {
     val future = uploadBlockWrapper(hostname, port, execId, blockId, blockData, level, classTag)
     ThreadUtils.awaitResult(future, Duration.Inf)
   }
