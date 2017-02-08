@@ -81,6 +81,19 @@ abstract class BlockTransferService extends ShuffleClient with Closeable with Lo
       level: StorageLevel,
       classTag: ClassTag[_]): Future[Unit]
 
+  def uploadBlockWrapper(
+      hostname: String,
+      port: Int,
+      execId: String,
+      blockId: BlockId,
+      blockData: ManagedBuffer,
+      level: StorageLevel,
+      classTag: ClassTag[_]): Future[Unit] = {
+    logInfo(s"TRANSFER: uploadBlockWrapper(hostname=$hostname, port=$port, execId=$execId, " +
+      s"blockId=$blockId, blockData=$blockData, level=$level, classTag=$classTag)")
+    uploadBlock(hostname, port, execId, blockId, blockData, level, classTag)
+  }
+
   /**
    * A special case of [[fetchBlocks]], as it fetches only one block and is blocking.
    *
@@ -120,7 +133,7 @@ abstract class BlockTransferService extends ShuffleClient with Closeable with Lo
       blockData: ManagedBuffer,
       level: StorageLevel,
       classTag: ClassTag[_]): Unit = {
-    val future = uploadBlock(hostname, port, execId, blockId, blockData, level, classTag)
+    val future = uploadBlockWrapper(hostname, port, execId, blockId, blockData, level, classTag)
     ThreadUtils.awaitResult(future, Duration.Inf)
   }
 }
