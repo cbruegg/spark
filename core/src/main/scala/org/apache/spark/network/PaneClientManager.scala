@@ -20,6 +20,7 @@ package org.apache.spark.network
 import java.net.InetAddress
 
 import org.apache.spark.SparkContext
+import org.apache.spark.internal.Logging
 import paneclient._
 
 object PaneClientManager {
@@ -28,7 +29,8 @@ object PaneClientManager {
 
   private def obtainPaneClient(): PaneClient = synchronized {
     if (paneClient == null) {
-      val hostName = "10.0.0.1" // TODO Don't hardcode this
+      val hostName = "10.0.0.1"
+      // TODO Don't hardcode this
       val port = 4242 // TODO Don't hardcode this
       paneClient = new PaneClientImpl(InetAddress.getByName(hostName), port)
       paneClient.authenticate("username")
@@ -37,28 +39,37 @@ object PaneClientManager {
     paneClient
   }
 
-  def notifyFlow(srcHost: InetAddress, srcPort: Int, trgHost: InetAddress, trgPort: Int): Unit = {
+  def notifyFlow(srcHost: InetAddress, srcPort: Int,
+                 trgHost: InetAddress, trgPort: Int, logging: Logging): Unit = {
     val conf = SparkContext.getOrCreate().conf
     if (conf.getBoolean("spark.network.disable_pane", defaultValue = false)) {
       return
     }
 
-    val flowGroup = new PaneFlowGroup
-    flowGroup.setSrcHost(srcHost)
-    flowGroup.setSrcPort(srcPort)
-    flowGroup.setDstHost(trgHost)
-    flowGroup.setDstPort(trgPort)
+    try {
+      val flowGroup = new PaneFlowGroup
+      flowGroup.setSrcHost(srcHost)
+      flowGroup.setSrcPort(srcPort)
+      flowGroup.setDstHost(trgHost)
+      flowGroup.setDstPort(trgPort)
 
-    val bandwidthBitsPerSec = 1e8.toInt // TODO Don't hardcode this
-    val start = new PaneRelativeTime
-    start.setRelativeTime(0) // Now
-    val end = new PaneRelativeTime
-    end.setRelativeTime(5000) // In 5000 ms
+      val bandwidthBitsPerSec = 1e8.toInt
+      // TODO Don't hardcode this
+      val start = new PaneRelativeTime
+      start.setRelativeTime(0)
+      // Now
+      val end = new PaneRelativeTime
+      end.setRelativeTime(5000) // In 5000 ms
 
-    val reservation = new PaneReservation(bandwidthBitsPerSec, flowGroup, start, end)
-    val share = new PaneShare(s"$srcHost:$srcPort-$trgHost:$trgPort\_${shares += 1}",
-      Int.MaxValue, flowGroup)
-    share.setClient(obtainPaneClient())
-    share.reserve(reservation)
+      val reservation = new PaneReservation(bandwidthBitsPerSec, flowGroup, start, end)
+      val share = new PaneShare(s"$srcHost:$srcPort-$trgHost:$trgPort\_${shares += 1}",
+        Int.MaxValue, flowGroup)
+      share.setClient(obtainPaneClient())
+      share.reserve(reservation)
+      logging.logInfo(s"PANE reservation complete. ($srcHost:$srcPort-$trgHost:$trgPort)")
+    } catch {
+      case e: Exception =>
+        logging.logInfo(s"PANE reservation failed. ($srcHost:$srcPort-$trgHost:$trgPort)", e)
+    }
   }
 }

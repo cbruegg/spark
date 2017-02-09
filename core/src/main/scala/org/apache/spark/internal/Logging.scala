@@ -50,7 +50,7 @@ private[spark] trait Logging {
   }
 
   // Log methods that take only a String
-  protected def logInfo(msg: => String) {
+  def logInfo(msg: => String) {
     if (log.isInfoEnabled) log.info(msg)
   }
 
@@ -71,7 +71,7 @@ private[spark] trait Logging {
   }
 
   // Log methods that take Throwables (Exceptions/Errors) too
-  protected def logInfo(msg: => String, throwable: Throwable) {
+  def logInfo(msg: => String, throwable: Throwable) {
     if (log.isInfoEnabled) log.info(msg, throwable)
   }
 
