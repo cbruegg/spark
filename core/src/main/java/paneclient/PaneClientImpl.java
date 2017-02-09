@@ -1,7 +1,7 @@
 package paneclient;
 
-import edu.brown.cs.paneclient.PaneException.InvalidAuthenticateException;
-import edu.brown.cs.paneclient.PaneException.InvalidUserException;
+import paneclient.PaneException.InvalidAuthenticateException;
+import paneclient.PaneException.InvalidUserException;
 
 import java.io.IOException;
 import java.io.InputStream;

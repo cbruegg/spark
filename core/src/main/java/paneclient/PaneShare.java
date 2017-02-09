@@ -1,7 +1,5 @@
 package paneclient;
 
-import edu.brown.cs.paneclient.PaneException.*;
-
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -109,7 +107,7 @@ public class PaneShare {
 		_client = client;
 	}
 
-	public synchronized void grant(PaneUser user) throws IOException, InvalidGrantException {
+	public synchronized void grant(PaneUser user) throws IOException, PaneException.InvalidGrantException {
 		
 		_principals.add(user.getName());
 		String cmd = "Grant " + getShareName() + " to " + user.getName() + ".\n";
@@ -122,7 +120,7 @@ public class PaneShare {
 		}
 	}	
 
-	public void newShare(PaneShare share) throws IOException, InvalidNewShareException {
+	public void newShare(PaneShare share) throws IOException, PaneException.InvalidNewShareException {
 		
 		share.setParent(this);
 		String cmd = share.generateCreationCmd();
@@ -136,7 +134,7 @@ public class PaneShare {
 		}
 	}
 	
-	public void reserve(PaneReservation resv) throws IOException, InvalidResvException {
+	public void reserve(PaneReservation resv) throws IOException, PaneException.InvalidResvException {
 		
 		resv.setParent(this);
 		String cmd = resv.generateCmd();
@@ -149,7 +147,7 @@ public class PaneShare {
 		}
 	}
 	
-	public void allow(PaneAllow allow) throws IOException, InvalidAllowException {
+	public void allow(PaneAllow allow) throws IOException, PaneException.InvalidAllowException {
 		
 		allow.setParent(this);
 		String cmd = allow.generateCmd();
@@ -162,7 +160,7 @@ public class PaneShare {
 		}
 	}
 	
-	public void deny(PaneDeny deny) throws IOException, InvalidDenyException {
+	public void deny(PaneDeny deny) throws IOException, PaneException.InvalidDenyException {
 		
 		deny.setParent(this);
 		String cmd = deny.generateCmd();
