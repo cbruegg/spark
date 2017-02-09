@@ -93,8 +93,8 @@ abstract class BlockTransferService extends ShuffleClient with Closeable with Lo
                           classTag: ClassTag[_]): Future[Unit] = {
     logInfo(s"TRANSFER: uploadBlockWrapper(hostname=$host, port=$trgPort, execId=$execId, " +
       s"blockId=$blockId, blockData=$blockData, level=$level, classTag=$classTag)")
-    // PaneClientManager.notifyFlow(InetAddress.getByName(hostName), port,
-    //  InetAddress.getByName(host), trgPort, this)
+    PaneClientManager.notifyFlow(InetAddress.getByName(hostName), port,
+     InetAddress.getByName(host), trgPort, this)
     uploadBlock(host, port, execId, blockId, blockData, level, classTag)
   }
 
@@ -106,8 +106,8 @@ abstract class BlockTransferService extends ShuffleClient with Closeable with Lo
   def fetchBlockSync(host: String, srcPort: Int, execId: String, blockId: String): ManagedBuffer = {
     logInfo(s"TRANSFER: fetchBlockSync(host=$host, srcPort=$srcPort, " +
       s"execId=$execId, blockId=$blockId)")
-    // PaneClientManager.notifyFlow(InetAddress.getByName(host), srcPort,
-    //  InetAddress.getByName(hostName), port, this)
+    PaneClientManager.notifyFlow(InetAddress.getByName(host), srcPort,
+     InetAddress.getByName(hostName), port, this)
 
     // A monitor for the thread to wait on.
     val result = Promise[ManagedBuffer]()
