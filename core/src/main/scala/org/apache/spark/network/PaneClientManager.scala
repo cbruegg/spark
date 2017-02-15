@@ -69,7 +69,7 @@ object PaneClientManager {
       end.setRelativeTime(5000) // In 5000 ms
 
       val reservation = new PaneReservation(bandwidthBitsPerSec, flowGroup, start, end)
-      val share = new PaneShare(s"$srcHost:$srcPort-$trgHost:$trgPort\_${shares += 1}",
+      val share = new PaneShare(s"$srcHost:$srcPort-$trgHost:${trgPort}_${shares += 1}",
         Int.MaxValue, flowGroup)
       share.setClient(obtainPaneClient())
       share.reserve(reservation)
