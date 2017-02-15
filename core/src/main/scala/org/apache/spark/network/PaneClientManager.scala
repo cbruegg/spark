@@ -41,8 +41,15 @@ object PaneClientManager {
 
   def notifyFlow(srcHost: InetAddress, srcPort: Int,
                  trgHost: InetAddress, trgPort: Int, logging: Logging): Unit = {
-    val conf = SparkContext.getOrCreate().conf
-    if (conf.getBoolean("spark.network.disable_pane", defaultValue = false)) {
+    var disablePane: Boolean = false
+
+    try {
+      disablePane = System.getProperty("spark.network.disable_pane", "false").toBoolean
+    } catch {
+      case _: Exception =>
+    }
+
+    if (disablePane) {
       return
     }
 
