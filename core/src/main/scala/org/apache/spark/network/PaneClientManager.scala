@@ -44,7 +44,7 @@ object PaneClientManager {
     var disablePane: Boolean = false
 
     try {
-      disablePane = System.getProperty("spark.network.disable_pane", "false").toBoolean
+      disablePane = System.getProperty("disable_pane", "false").toBoolean
     } catch {
       case _: Exception =>
     }
