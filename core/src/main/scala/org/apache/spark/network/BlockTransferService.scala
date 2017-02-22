@@ -105,8 +105,6 @@ abstract class BlockTransferService extends ShuffleClient with Closeable with Lo
   def fetchBlockSync(host: String, srcPort: Int, execId: String, blockId: String): ManagedBuffer = {
     logInfo(s"TRANSFER: fetchBlockSync(host=$host, srcPort=$srcPort, " +
       s"execId=$execId, blockId=$blockId)")
-    PaneClientManager.notifyFlow(host, srcPort, hostName, port, this)
-    // TODO Put this inside fetchBlocks
 
     // A monitor for the thread to wait on.
     val result = Promise[ManagedBuffer]()

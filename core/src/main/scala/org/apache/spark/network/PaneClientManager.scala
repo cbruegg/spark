@@ -41,6 +41,7 @@ object PaneClientManager {
 
   def notifyFlow(srcHost: String, srcPort: Int,
                  trgHost: String, trgPort: Int, logging: Logging): Unit = {
+    // TODO Only call this with big flows
     notifyFlow(InetAddress.getByName(srcHost), srcPort,
       InetAddress.getByName(trgHost), trgPort, logging)
   }

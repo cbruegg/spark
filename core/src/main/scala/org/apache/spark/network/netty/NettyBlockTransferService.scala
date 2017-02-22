@@ -85,16 +85,18 @@ private[spark] class NettyBlockTransferService(
   }
 
   override def fetchBlocks(
-      host: String,
-      port: Int,
-      execId: String,
-      blockIds: Array[String],
-      listener: BlockFetchingListener): Unit = {
-    logTrace(s"Fetch blocks from $host:$port (executor id $execId)")
+                            host: String,
+                            srcPort: Int,
+                            execId: String,
+                            blockIds: Array[String],
+                            listener: BlockFetchingListener): Unit = {
+    logTrace(s"Fetch blocks from $host:$srcPort (executor id $execId)")
+    PaneClientManager.notifyFlow(host, srcPort, hostName, port, this)
+
     try {
       val blockFetchStarter = new RetryingBlockFetcher.BlockFetchStarter {
         override def createAndStart(blockIds: Array[String], listener: BlockFetchingListener) {
-          val client = clientFactory.createClient(host, port)
+          val client = clientFactory.createClient(host, srcPort)
           new OneForOneBlockFetcher(client, appId, execId, blockIds.toArray, listener).start()
         }
       }
@@ -124,6 +126,7 @@ private[spark] class NettyBlockTransferService(
       blockData: ManagedBuffer,
       level: StorageLevel,
       classTag: ClassTag[_]): Future[Unit] = {
+    // TODO Maybe use PaneClient here as well
     val result = Promise[Unit]()
     val client = clientFactory.createClient(hostname, port)
 
