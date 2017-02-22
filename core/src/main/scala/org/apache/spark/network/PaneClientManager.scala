@@ -83,10 +83,10 @@ object PaneClientManager {
         Int.MaxValue, flowGroup)
       share.setClient(obtainPaneClient())
       share.reserve(reservation)
-      logging.logInfo(s"PANE reservation complete. ($srcHost:$srcPort-$trgHost:$trgPort)")
+      // TODO logging.logInfo(s"PANE resv complete. ($srcHost:$srcPort-$trgHost:$trgPort)")
     } catch {
       case e: Exception =>
-        logging.logInfo(s"PANE reservation failed. ($srcHost:$srcPort-$trgHost:$trgPort)", e)
+        // TODO logging.logInfo(s"PANE resv failed. ($srcHost:$srcPort-$trgHost:$trgPort)", e)
     }
   }
 }
