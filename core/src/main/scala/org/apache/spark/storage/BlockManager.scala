@@ -783,9 +783,6 @@ private[spark] class BlockManager(
       classTag: ClassTag[T],
       tellMaster: Boolean = true,
       keepReadLock: Boolean = false): Boolean = {
-    // logInfo(s"TRANSFER: doPutBytes(blockId=$blockId, bytes=${bytes.size}B, level=$level, " +
-    //   s"classTag=$classTag, tellMaster=$tellMaster, keepReadLock=$keepReadLock)")
-
     doPut(blockId, level, classTag, tellMaster = tellMaster, keepReadLock = keepReadLock) { info =>
       val startTimeMs = System.currentTimeMillis
       // Since we're storing bytes, initiate the replication before storing them locally.

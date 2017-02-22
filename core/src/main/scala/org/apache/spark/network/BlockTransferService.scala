@@ -18,10 +18,7 @@
 package org.apache.spark.network
 
 import java.io.Closeable
-import java.net.InetAddress
 import java.nio.ByteBuffer
-
-import org.apache.spark.SparkContext
 
 import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration.Duration
@@ -89,10 +86,6 @@ abstract class BlockTransferService extends ShuffleClient with Closeable with Lo
     * It is also only available after [[init]] is invoked.
     */
   def fetchBlockSync(host: String, srcPort: Int, execId: String, blockId: String): ManagedBuffer = {
-    // logInfo(s"TRANSFER: fetchBlockSync(host=$host, srcPort=$srcPort, " +
-    //   s"execId=$execId, blockId=$blockId)")
-    // PaneClientManager.notifyFlow(host, srcPort, hostName, port, this)
-
     // A monitor for the thread to wait on.
     val result = Promise[ManagedBuffer]()
     fetchBlocks(host, port, execId, Array(blockId),
