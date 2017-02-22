@@ -91,9 +91,9 @@ abstract class BlockTransferService extends ShuffleClient with Closeable with Lo
                           blockData: ManagedBuffer,
                           level: StorageLevel,
                           classTag: ClassTag[_]): Future[Unit] = {
-    // logInfo(s"TRANSFER: uploadBlockWrapper(hostname=$host, port=$trgPort, execId=$execId, " +
-    //  s"blockId=$blockId, blockData=$blockData, level=$level, classTag=$classTag)")
-    // PaneClientManager.notifyFlow(hostName, port, host, trgPort, this)
+    logInfo(s"TRANSFER: uploadBlockWrapper(hostname=$host, port=$trgPort, execId=$execId, " +
+      s"blockId=$blockId, blockData=$blockData, level=$level, classTag=$classTag)")
+    PaneClientManager.notifyFlow(hostName, port, host, trgPort, this)
     uploadBlock(host, port, execId, blockId, blockData, level, classTag)
   }
 
@@ -103,9 +103,9 @@ abstract class BlockTransferService extends ShuffleClient with Closeable with Lo
     * It is also only available after [[init]] is invoked.
     */
   def fetchBlockSync(host: String, srcPort: Int, execId: String, blockId: String): ManagedBuffer = {
-    // logInfo(s"TRANSFER: fetchBlockSync(host=$host, srcPort=$srcPort, " +
-    //   s"execId=$execId, blockId=$blockId)")
-    // PaneClientManager.notifyFlow(host, srcPort, hostName, port, this)
+    logInfo(s"TRANSFER: fetchBlockSync(host=$host, srcPort=$srcPort, " +
+      s"execId=$execId, blockId=$blockId)")
+    PaneClientManager.notifyFlow(host, srcPort, hostName, port, this)
     // TODO Put this inside fetchBlocks
 
     // A monitor for the thread to wait on.

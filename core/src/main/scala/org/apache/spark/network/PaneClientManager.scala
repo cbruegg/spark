@@ -41,16 +41,12 @@ object PaneClientManager {
 
   def notifyFlow(srcHost: String, srcPort: Int,
                  trgHost: String, trgPort: Int, logging: Logging): Unit = {
-    return
-
     notifyFlow(InetAddress.getByName(srcHost), srcPort,
       InetAddress.getByName(trgHost), trgPort, logging)
   }
 
   def notifyFlow(srcHost: InetAddress, srcPort: Int,
                  trgHost: InetAddress, trgPort: Int, logging: Logging): Unit = {
-    return
-
     var disablePane: Boolean = false
 
     try {
