@@ -18,7 +18,10 @@
 package org.apache.spark.network
 
 import java.io.Closeable
+import java.net.InetAddress
 import java.nio.ByteBuffer
+
+import org.apache.spark.SparkContext
 
 import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration.Duration
@@ -80,12 +83,30 @@ abstract class BlockTransferService extends ShuffleClient with Closeable with Lo
                    level: StorageLevel,
                    classTag: ClassTag[_]): Future[Unit]
 
+  def uploadBlockWrapper(
+                          host: String,
+                          trgPort: Int,
+                          execId: String,
+                          blockId: BlockId,
+                          blockData: ManagedBuffer,
+                          level: StorageLevel,
+                          classTag: ClassTag[_]): Future[Unit] = {
+    // logInfo(s"TRANSFER: uploadBlockWrapper(hostname=$host, port=$trgPort, execId=$execId, " +
+    //  s"blockId=$blockId, blockData=$blockData, level=$level, classTag=$classTag)")
+    // PaneClientManager.notifyFlow(hostName, port, host, trgPort, this)
+    uploadBlock(host, port, execId, blockId, blockData, level, classTag)
+  }
+
   /**
     * A special case of [[fetchBlocks]], as it fetches only one block and is blocking.
     *
     * It is also only available after [[init]] is invoked.
     */
   def fetchBlockSync(host: String, srcPort: Int, execId: String, blockId: String): ManagedBuffer = {
+    // logInfo(s"TRANSFER: fetchBlockSync(host=$host, srcPort=$srcPort, " +
+    //   s"execId=$execId, blockId=$blockId)")
+    // PaneClientManager.notifyFlow(host, srcPort, hostName, port, this)
+
     // A monitor for the thread to wait on.
     val result = Promise[ManagedBuffer]()
     fetchBlocks(host, port, execId, Array(blockId),
@@ -118,7 +139,7 @@ abstract class BlockTransferService extends ShuffleClient with Closeable with Lo
                        blockData: ManagedBuffer,
                        level: StorageLevel,
                        classTag: ClassTag[_]): Unit = {
-    val future = uploadBlock(hostname, port, execId, blockId, blockData, level, classTag)
+    val future = uploadBlockWrapper(hostname, port, execId, blockId, blockData, level, classTag)
     ThreadUtils.awaitResult(future, Duration.Inf)
   }
 }
