@@ -139,7 +139,7 @@ abstract class BlockTransferService extends ShuffleClient with Closeable with Lo
                        blockData: ManagedBuffer,
                        level: StorageLevel,
                        classTag: ClassTag[_]): Unit = {
-    val future = uploadBlockWrapper(hostname, port, execId, blockId, blockData, level, classTag)
+    val future = uploadBlock(hostname, port, execId, blockId, blockData, level, classTag)
     ThreadUtils.awaitResult(future, Duration.Inf)
   }
 }
