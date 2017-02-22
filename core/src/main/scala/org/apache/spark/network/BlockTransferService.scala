@@ -83,20 +83,6 @@ abstract class BlockTransferService extends ShuffleClient with Closeable with Lo
                    level: StorageLevel,
                    classTag: ClassTag[_]): Future[Unit]
 
-  def uploadBlockWrapper(
-                          host: String,
-                          trgPort: Int,
-                          execId: String,
-                          blockId: BlockId,
-                          blockData: ManagedBuffer,
-                          level: StorageLevel,
-                          classTag: ClassTag[_]): Future[Unit] = {
-    // logInfo(s"TRANSFER: uploadBlockWrapper(hostname=$host, port=$trgPort, execId=$execId, " +
-    //  s"blockId=$blockId, blockData=$blockData, level=$level, classTag=$classTag)")
-    // PaneClientManager.notifyFlow(hostName, port, host, trgPort, this)
-    uploadBlock(host, port, execId, blockId, blockData, level, classTag)
-  }
-
   /**
     * A special case of [[fetchBlocks]], as it fetches only one block and is blocking.
     *
