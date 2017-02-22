@@ -126,7 +126,6 @@ private[spark] class NettyBlockTransferService(
       blockData: ManagedBuffer,
       level: StorageLevel,
       classTag: ClassTag[_]): Future[Unit] = {
-    // TODO Maybe use PaneClient here as well
     val result = Promise[Unit]()
     val client = clientFactory.createClient(hostname, port)
 
