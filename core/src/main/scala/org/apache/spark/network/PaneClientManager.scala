@@ -18,6 +18,7 @@
 package org.apache.spark.network
 
 import java.net.InetAddress
+import java.util.concurrent.atomic.AtomicInteger
 
 import org.apache.spark.SparkContext
 import org.apache.spark.internal.Logging
@@ -25,7 +26,7 @@ import paneclient._
 
 object PaneClientManager {
   private var paneClient: PaneClient = null
-  private var shares = 0
+  private var shares = new AtomicInteger(0)
 
   private def obtainPaneClient(): PaneClient = synchronized {
     if (paneClient == null) {
@@ -77,8 +78,7 @@ object PaneClientManager {
       end.setRelativeTime(5000) // In 5000 ms
 
       val reservation = new PaneReservation(bandwidthBitsPerSec, flowGroup, start, end)
-      val share = new PaneShare(s"$srcHost:$srcPort-$trgHost:${trgPort}_${shares += 1}",
-        Int.MaxValue, flowGroup)
+      val share = new PaneShare(shares.getAndIncrement().toString, Int.MaxValue, flowGroup)
       share.setClient(obtainPaneClient())
       share.reserve(reservation)
       logging.logInfo(s"PANE reservation complete. ($srcHost:$srcPort-$trgHost:$trgPort)")
