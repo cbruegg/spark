@@ -29,7 +29,7 @@ object PaneClientManager {
 
   private def obtainPaneClient(): PaneClient = synchronized {
     if (paneClient == null) {
-      val hostName = "10.0.0.1"
+      val hostName = "10.0.0.11"
       // TODO Don't hardcode this
       val port = 4242 // TODO Don't hardcode this
       paneClient = new PaneClientImpl(InetAddress.getByName(hostName), port)
