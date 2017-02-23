@@ -66,14 +66,15 @@ object PaneClientManager {
       flowGroup.setSrcPort(srcPort)
       flowGroup.setDstHost(trgHost)
       flowGroup.setDstPort(trgPort)
+      flowGroup.setTransportProto(PaneFlowGroup.PROTO_TCP)
 
-      val bandwidthBitsPerSec = 100
+      val bandwidthBitsPerSec = 1000
       // TODO Don't hardcode this
       val start = new PaneRelativeTime
       start.setRelativeTime(0)
       // Now
       val end = new PaneRelativeTime
-      end.setRelativeTime(300) // In 300 ms
+      end.setRelativeTime(5000) // In 5000 ms
 
       val reservation = new PaneReservation(bandwidthBitsPerSec, flowGroup, start, end)
       val share = new PaneShare(s"$srcHost:$srcPort-$trgHost:${trgPort}_${shares += 1}",
