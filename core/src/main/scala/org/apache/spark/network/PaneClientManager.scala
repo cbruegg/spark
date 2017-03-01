@@ -68,7 +68,7 @@ object PaneClientManager {
       return
     }
 
-    val bandwidthMegaBitsPerSec = (bytes * 8 / GOAL_FINISH_TRANSFER_MS) / 1000000
+    val bandwidthMegaBitsPerSec = (bytes * 8 * 1000 /* ms */ / GOAL_FINISH_TRANSFER_MS) / 1000000
     try {
       val flowGroup = new PaneFlowGroup
       flowGroup.setSrcHost(srcHost)
