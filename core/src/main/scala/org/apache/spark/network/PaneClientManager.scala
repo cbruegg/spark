@@ -33,9 +33,8 @@ object PaneClientManager {
 
   private def obtainPaneClient(): PaneClient = synchronized {
     if (paneClient == null) {
-      val hostName = "10.0.0.11"
-      // TODO Don't hardcode this
-      val port = 4242 // TODO Don't hardcode this
+      val hostName = System.getProperty("pane_hostname")
+      val port = System.getProperty("pane_port", "4242").toInt
       paneClient = new PaneClientImpl(InetAddress.getByName(hostName), port)
       paneClient.authenticate("username")
     }
@@ -60,7 +59,7 @@ object PaneClientManager {
     var disablePane: Boolean = false
 
     try {
-      disablePane = System.getProperty("disable_pane", "false").toBoolean
+      disablePane = System.getProperty("pane_disable", "false").toBoolean
     } catch {
       case _: Exception =>
     }
@@ -77,14 +76,14 @@ object PaneClientManager {
       flowGroup.setDstPort(trgPort)
       flowGroup.setTransportProto(PaneFlowGroup.PROTO_TCP)
 
-      val bandwidthBitsPerSec = (bytes * 8 / GOAL_FINISH_TRANSFER_MS) / 1000
+      val bandwidthMegaBitsPerSec = (bytes * 8 / GOAL_FINISH_TRANSFER_MS) / 1000000
       val start = new PaneRelativeTime
       start.setRelativeTime(0)
       // Now
       val end = new PaneRelativeTime
-      end.setRelativeTime(GOAL_FINISH_TRANSFER_MS * 2) // In 5000 ms
+      end.setRelativeTime(GOAL_FINISH_TRANSFER_MS * 2)
 
-      val reservation = new PaneReservation(bandwidthBitsPerSec.toInt, flowGroup, start, end)
+      val reservation = new PaneReservation(bandwidthMegaBitsPerSec.toInt, flowGroup, start, end)
       val share = new PaneShare(shares.getAndIncrement().toString, Int.MaxValue, flowGroup)
       share.setClient(obtainPaneClient())
       share.reserve(reservation)
