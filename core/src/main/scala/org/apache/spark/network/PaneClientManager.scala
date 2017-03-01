@@ -25,8 +25,11 @@ import org.apache.spark.internal.Logging
 import paneclient._
 
 object PaneClientManager {
+
   private var paneClient: PaneClient = null
-  private var shares = new AtomicInteger(0)
+  private val shares = new AtomicInteger(0)
+  private val MIN_BYTES = 5000
+  private val GOAL_FINISH_TRANSFER_MS = 500
 
   private def obtainPaneClient(): PaneClient = synchronized {
     if (paneClient == null) {
@@ -41,14 +44,19 @@ object PaneClientManager {
   }
 
   def notifyFlow(srcHost: String, srcPort: Int,
-                 trgHost: String, trgPort: Int, logging: Logging): Unit = {
-    // TODO Only call this with big flows
+                 trgHost: String, trgPort: Int,
+                 logging: Logging, bytes: Long): Unit = {
     notifyFlow(InetAddress.getByName(srcHost), srcPort,
-      InetAddress.getByName(trgHost), trgPort, logging)
+      InetAddress.getByName(trgHost), trgPort, logging, bytes)
   }
 
   def notifyFlow(srcHost: InetAddress, srcPort: Int,
-                 trgHost: InetAddress, trgPort: Int, logging: Logging): Unit = {
+                 trgHost: InetAddress, trgPort: Int,
+                 logging: Logging, bytes: Long): Unit = {
+    if (bytes < MIN_BYTES) {
+      return
+    }
+
     var disablePane: Boolean = false
 
     try {
@@ -69,22 +77,21 @@ object PaneClientManager {
       flowGroup.setDstPort(trgPort)
       flowGroup.setTransportProto(PaneFlowGroup.PROTO_TCP)
 
-      val bandwidthBitsPerSec = 1000
-      // TODO Don't hardcode this
+      val bandwidthBitsPerSec = (bytes * 8 / GOAL_FINISH_TRANSFER_MS) / 1000
       val start = new PaneRelativeTime
       start.setRelativeTime(0)
       // Now
       val end = new PaneRelativeTime
-      end.setRelativeTime(5000) // In 5000 ms
+      end.setRelativeTime(GOAL_FINISH_TRANSFER_MS * 2) // In 5000 ms
 
-      val reservation = new PaneReservation(bandwidthBitsPerSec, flowGroup, start, end)
+      val reservation = new PaneReservation(bandwidthBitsPerSec.toInt, flowGroup, start, end)
       val share = new PaneShare(shares.getAndIncrement().toString, Int.MaxValue, flowGroup)
       share.setClient(obtainPaneClient())
       share.reserve(reservation)
-      logging.logInfo(s"PANE reservation complete. ($srcHost:$srcPort-$trgHost:$trgPort)")
+      logging.logInfo(s"PANE reservation complete: ($srcHost:$srcPort-$trgHost:$trgPort)")
     } catch {
-      case e: Exception =>
-        logging.logInfo(s"PANE reservation failed. ($srcHost:$srcPort-$trgHost:$trgPort)", e)
+      case _: Throwable =>
+        logging.logInfo(s"PANE reservation failed: ($srcHost:$srcPort-$trgHost:$trgPort)")
     }
   }
 }

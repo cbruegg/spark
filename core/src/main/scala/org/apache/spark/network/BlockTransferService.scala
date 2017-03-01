@@ -92,8 +92,8 @@ abstract class BlockTransferService extends ShuffleClient with Closeable with Lo
                           level: StorageLevel,
                           classTag: ClassTag[_]): Future[Unit] = {
     logInfo(s"TRANSFER: uploadBlockWrapper(hostname=$host, port=$trgPort, execId=$execId, " +
-      s"blockId=$blockId, blockData=$blockData, level=$level, classTag=$classTag)")
-    PaneClientManager.notifyFlow(hostName, port, host, trgPort, this)
+      s"blockId=$blockId, blockDataBytes=${blockData.size()}, level=$level, classTag=$classTag)")
+    PaneClientManager.notifyFlow(hostName, port, host, trgPort, this, blockData.size())
     uploadBlock(host, port, execId, blockId, blockData, level, classTag)
   }
 
