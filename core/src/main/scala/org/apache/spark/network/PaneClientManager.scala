@@ -28,7 +28,7 @@ object PaneClientManager {
 
   private var paneClient: PaneClient = null
   private val shares = new AtomicInteger(0)
-  private val MIN_BYTES = 5000
+  private val MIN_BYTES = 1000
   private val GOAL_FINISH_TRANSFER_MS = 500
 
   private def obtainPaneClient(): PaneClient = synchronized {
