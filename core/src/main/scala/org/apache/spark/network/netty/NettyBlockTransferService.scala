@@ -93,6 +93,7 @@ private[spark] class NettyBlockTransferService(
     logTrace(s"Fetch blocks from $host:$srcPort (executor id $execId)")
     PaneClientManager.notifyFlow(host, srcPort, hostName, port, this,
       1024 * blockIds.length) // TODO
+    logInfo(s"TRANSFER: fetchBlocks (n=${blockIds.length})")
 
     try {
       val blockFetchStarter = new RetryingBlockFetcher.BlockFetchStarter {

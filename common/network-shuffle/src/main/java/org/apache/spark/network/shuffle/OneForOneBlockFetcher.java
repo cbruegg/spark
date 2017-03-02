@@ -94,8 +94,8 @@ public class OneForOneBlockFetcher {
       public void onSuccess(ByteBuffer response) {
         try {
           streamHandle = (StreamHandle) BlockTransferMessage.Decoder.fromByteBuffer(response);
-          logger.info("TRANSFER: Expecting " + streamHandle.encodedLength() + " bytes to be transferred.");
           logger.trace("Successfully opened blocks {}, preparing to fetch chunks.", streamHandle);
+          logger.info("TRANSFER: " +streamHandle.numChunks + " chunks to be transferred.");
 
           // Immediately request all chunks -- we expect that the total size of the request is
           // reasonable due to higher level chunking in [[ShuffleBlockFetcherIterator]].
