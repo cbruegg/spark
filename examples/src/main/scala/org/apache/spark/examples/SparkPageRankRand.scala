@@ -21,6 +21,7 @@ package org.apache.spark.examples
 import org.apache.spark.sql.{Dataset, SparkSession}
 
 import scala.util.Random
+import spark.implicits._
 
 /**
  * Computes the PageRank of URLs from an input file. Input file should
