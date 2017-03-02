@@ -21,7 +21,6 @@ package org.apache.spark.examples
 import org.apache.spark.sql.{Dataset, SparkSession}
 
 import scala.util.Random
-import spark.implicits._
 
 /**
  * Computes the PageRank of URLs from an input file. Input file should
@@ -65,6 +64,7 @@ object SparkPageRankRand {
 
     val iters = if (args.length > 1) args(1).toInt else 10
 
+    import spark.implicits._
 
     val lineCount = args(0).toInt
     val rand = new Random
