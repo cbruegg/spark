@@ -17,12 +17,6 @@
 
 package org.apache.spark.network.shuffle;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.spark.network.buffer.ManagedBuffer;
 import org.apache.spark.network.client.ChunkReceivedCallback;
 import org.apache.spark.network.client.RpcResponseCallback;
@@ -30,6 +24,11 @@ import org.apache.spark.network.client.TransportClient;
 import org.apache.spark.network.shuffle.protocol.BlockTransferMessage;
 import org.apache.spark.network.shuffle.protocol.OpenBlocks;
 import org.apache.spark.network.shuffle.protocol.StreamHandle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 /**
  * Simple wrapper on top of a TransportClient which interprets each chunk as a whole block, and
@@ -95,6 +94,7 @@ public class OneForOneBlockFetcher {
       public void onSuccess(ByteBuffer response) {
         try {
           streamHandle = (StreamHandle) BlockTransferMessage.Decoder.fromByteBuffer(response);
+          logger.info("TRANSFER: Expecting " + streamHandle.encodedLength() + " bytes to be transferred.");
           logger.trace("Successfully opened blocks {}, preparing to fetch chunks.", streamHandle);
 
           // Immediately request all chunks -- we expect that the total size of the request is
