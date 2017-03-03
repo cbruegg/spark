@@ -67,8 +67,8 @@ private[spark] class TorrentBroadcast[T: ClassTag](obj: T, id: Long)
 
   /** The compression codec to use, or None if compression is disabled */
   @transient private var compressionCodec: Option[CompressionCodec] = _
-  /** Size of each block. Default value is 4MB.  This value is only read by the broadcaster. */
-  @transient private var blockSize: Int = _
+  /** Size of each block. Default value is 4MB. */
+  private var blockSize: Int = _
 
   private def setConf(conf: SparkConf) {
     compressionCodec = if (conf.getBoolean("spark.broadcast.compress", true)) {
@@ -132,7 +132,7 @@ private[spark] class TorrentBroadcast[T: ClassTag](obj: T, id: Long)
       val pieceId = BroadcastBlockId(id, "piece" + pid)
       val locations = bm.getLocations(pieceId).toList
 
-      estimatedTrafficBytesByBlockManagerId(locations.head) += 4000000L
+      estimatedTrafficBytesByBlockManagerId(locations.head) += blockSize
       pidToPieceIds += ((pid, pieceId))
       locationsByPieceId(pieceId) = locations
     }
