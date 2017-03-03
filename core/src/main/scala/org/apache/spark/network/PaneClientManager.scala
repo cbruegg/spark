@@ -36,7 +36,7 @@ object PaneClientManager {
       val hostName = System.getProperty("pane_hostname")
       val port = System.getProperty("pane_port", "4242").toInt
       paneClient = new PaneClientImpl(InetAddress.getByName(hostName), port)
-      paneClient.authenticate("username")
+      paneClient.authenticate("root")
     }
 
     paneClient
