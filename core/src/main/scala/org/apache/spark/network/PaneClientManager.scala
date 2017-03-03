@@ -85,7 +85,7 @@ object PaneClientManager {
       val reservation = new PaneReservation(bandwidthMegaBytesPerSec.toInt, flowGroup, start, end)
 
       try {
-        val testShare = new PaneShare("test" + shares.getAndIncrement(), 10, flowGroup)
+        val testShare = new PaneShare("test" + shares.getAndIncrement(), 10, null)
         obtainPaneClient().getRootShare.newShare(testShare)
         logging.logInfo("PANE share successfully created.")
       } catch {
