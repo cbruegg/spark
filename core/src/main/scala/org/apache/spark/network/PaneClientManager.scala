@@ -93,9 +93,9 @@ object PaneClientManager {
       logging.logInfo(s"PANE reservation complete: ($srcHost:$srcPort-$trgHost:$trgPort" +
         s"-$bandwidthMegaBytesPerSec)")
     } catch {
-      case _: Throwable =>
+      case t: Throwable =>
         logging.logInfo(s"PANE reservation failed: ($srcHost:$srcPort-$trgHost:$trgPort" +
-          s"-$bandwidthMegaBytesPerSec)")
+          s"-$bandwidthMegaBytesPerSec)", t)
     }
   }
 }
