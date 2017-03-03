@@ -68,7 +68,7 @@ object PaneClientManager {
       return
     }
 
-    val bandwidthMegaBitsPerSec = (bytes * 8 * 1000 /* ms */ / GOAL_FINISH_TRANSFER_MS) / 1000000
+    val bandwidthMegaBytesPerSec = (bytes * 1000 /* ms */ / GOAL_FINISH_TRANSFER_MS) / 1000000
     try {
       val flowGroup = new PaneFlowGroup
       flowGroup.setSrcHost(srcHost)
@@ -83,16 +83,16 @@ object PaneClientManager {
       val end = new PaneRelativeTime
       end.setRelativeTime(GOAL_FINISH_TRANSFER_MS * 2)
 
-      val reservation = new PaneReservation(bandwidthMegaBitsPerSec.toInt, flowGroup, start, end)
+      val reservation = new PaneReservation(bandwidthMegaBytesPerSec.toInt, flowGroup, start, end)
       val share = new PaneShare(shares.getAndIncrement().toString, Int.MaxValue, flowGroup)
       share.setClient(obtainPaneClient())
       share.reserve(reservation)
       logging.logInfo(s"PANE reservation complete: ($srcHost:$srcPort-$trgHost:$trgPort" +
-        s"-$bandwidthMegaBitsPerSec)")
+        s"-$bandwidthMegaBytesPerSec)")
     } catch {
       case _: Throwable =>
         logging.logInfo(s"PANE reservation failed: ($srcHost:$srcPort-$trgHost:$trgPort" +
-          s"-$bandwidthMegaBitsPerSec)")
+          s"-$bandwidthMegaBytesPerSec)")
     }
   }
 }
