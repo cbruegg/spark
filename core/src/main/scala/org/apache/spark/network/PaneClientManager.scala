@@ -39,7 +39,7 @@ object PaneClientManager {
       paneClient = new PaneClientImpl(InetAddress.getByName(hostName), port)
       paneClient.authenticate("username")
 
-      rootShare = new PaneShare("root", Int.MaxValue, null)
+      rootShare = new PaneShare("rootShare", Int.MaxValue, null)
       rootShare.setClient(paneClient)
     }
 
