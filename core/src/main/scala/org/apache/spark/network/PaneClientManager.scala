@@ -20,7 +20,6 @@ package org.apache.spark.network
 import java.net.InetAddress
 import java.util.concurrent.atomic.AtomicInteger
 
-import org.apache.spark.SparkContext
 import org.apache.spark.internal.Logging
 import paneclient._
 
@@ -56,19 +55,17 @@ object PaneClientManager {
       return
     }
 
-    var disablePane: Boolean = false
-
-    try {
-      disablePane = System.getProperty("pane_disable", "false").toBoolean
+    val disablePane = try {
+      System.getProperty("pane_disable", "false").toBoolean
     } catch {
-      case _: Exception =>
+      case _: Exception => false
     }
 
     if (disablePane) {
       return
     }
 
-    val bandwidthMegaBytesPerSec = (bytes * 1000 /* ms */ / GOAL_FINISH_TRANSFER_MS) / 1000000
+    val bandwidthMbytesPS = (bytes * 1000 /* ms */ / GOAL_FINISH_TRANSFER_MS) / 1000000
     try {
       val flowGroup = new PaneFlowGroup
       flowGroup.setSrcHost(srcHost)
@@ -82,23 +79,15 @@ object PaneClientManager {
       // Now
       val end = new PaneRelativeTime
       end.setRelativeTime(GOAL_FINISH_TRANSFER_MS * 2)
-      val reservation = new PaneReservation(bandwidthMegaBytesPerSec.toInt, flowGroup, start, end)
-
-      try {
-        val testShare = new PaneShare("test" + shares.getAndIncrement(), 10, null)
-        obtainPaneClient().getRootShare.newShare(testShare)
-        logging.logInfo("PANE share successfully created.")
-      } catch {
-        case t: Throwable => logging.logInfo("Couldn't create PANE share", t)
-      }
+      val reservation = new PaneReservation(bandwidthMbytesPS.toInt, flowGroup, start, end)
 
       obtainPaneClient().getRootShare.reserve(reservation)
       logging.logInfo(s"PANE reservation complete: ($srcHost:$srcPort-$trgHost:$trgPort" +
-        s"-$bandwidthMegaBytesPerSec)")
+        s"-$bandwidthMbytesPS) for $bytes bytes to transfer in $GOAL_FINISH_TRANSFER_MS ms.")
     } catch {
       case t: Throwable =>
         logging.logInfo(s"PANE reservation failed: ($srcHost:$srcPort-$trgHost:$trgPort" +
-          s"-$bandwidthMegaBytesPerSec)", t)
+          s"-$bandwidthMbytesPS) for $bytes bytes to transfer in $GOAL_FINISH_TRANSFER_MS ms.", t)
     }
   }
 }
