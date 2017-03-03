@@ -555,7 +555,7 @@ private[spark] class BlockManager(
    * Return a list of locations for the given block, prioritizing the local machine since
    * multiple block managers can share the same host.
    */
-  private def getLocations(blockId: BlockId): Seq[BlockManagerId] = {
+  def getLocations(blockId: BlockId): Seq[BlockManagerId] = {
     val locs = Random.shuffle(master.getLocations(blockId))
     val (preferredLocs, otherLocs) = locs.partition { loc => blockManagerId.host == loc.host }
     preferredLocs ++ otherLocs
@@ -564,12 +564,13 @@ private[spark] class BlockManager(
   /**
    * Get block from remote block managers as serialized bytes.
    */
-  def getRemoteBytes(blockId: BlockId): Option[ChunkedByteBuffer] = {
+  def getRemoteBytes(blockId: BlockId, preferredLocations: Option[Seq[BlockManagerId]] = None):
+  Option[ChunkedByteBuffer] = {
     logDebug(s"Getting remote block $blockId")
     require(blockId != null, "BlockId is null")
     var runningFailureCount = 0
     var totalFailureCount = 0
-    val locations = getLocations(blockId)
+    val locations = preferredLocations.getOrElse(getLocations(blockId))
     val maxFetchFailures = locations.size
     var locationIterator = locations.iterator
     while (locationIterator.hasNext) {

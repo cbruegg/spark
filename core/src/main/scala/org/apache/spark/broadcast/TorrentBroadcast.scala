@@ -23,12 +23,13 @@ import java.nio.ByteBuffer
 import scala.collection.JavaConverters._
 import scala.reflect.ClassTag
 import scala.util.Random
-
 import org.apache.spark._
 import org.apache.spark.internal.Logging
 import org.apache.spark.io.CompressionCodec
+import org.apache.spark.network.PaneClientManager
+import org.apache.spark.network.netty.NettyBlockTransferService
 import org.apache.spark.serializer.Serializer
-import org.apache.spark.storage.{BlockId, BroadcastBlockId, StorageLevel}
+import org.apache.spark.storage.{BlockId, BlockManagerId, BroadcastBlockId, StorageLevel}
 import org.apache.spark.util.{ByteBufferInputStream, Utils}
 import org.apache.spark.util.io.{ChunkedByteBuffer, ChunkedByteBufferOutputStream}
 
@@ -122,8 +123,39 @@ private[spark] class TorrentBroadcast[T: ClassTag](obj: T, id: Long)
     val blocks = new Array[ChunkedByteBuffer](numBlocks)
     val bm = SparkEnv.get.blockManager
 
+    val locationsByPieceId = collection.mutable.Map[BroadcastBlockId, List[BlockManagerId]]()
+    val pidToPieceIds = collection.mutable.MutableList[(Int, BroadcastBlockId)]()
+    val estimatedTrafficBytesByBlockManagerId = collection.mutable.Map[BlockManagerId, Long]()
+
     for (pid <- Random.shuffle(Seq.range(0, numBlocks))) {
       val pieceId = BroadcastBlockId(id, "piece" + pid)
+      val locations = bm.getLocations(pieceId).toList
+
+      estimatedTrafficBytesByBlockManagerId(locations.head) += 4000000L
+      pidToPieceIds.+=:((pid, pieceId))
+      locationsByPieceId(pieceId) = locations
+    }
+
+    val usesNetty = bm.blockTransferService match {
+      case _: NettyBlockTransferService => true
+      case _ => false
+    }
+
+    if (usesNetty) {
+      for ((location, trafficBytes) <- estimatedTrafficBytesByBlockManagerId) {
+        val netty = bm.blockTransferService.asInstanceOf[NettyBlockTransferService]
+        val srcHost = location.host
+        val srcPort = location.port
+        val trgHost = netty.hostName
+        val trgPort = netty.port
+
+        logInfo(s"Reading block $broadcastId will transfer ~ up to $trafficBytes bytes " +
+          s"from $srcHost to $trgHost")
+        PaneClientManager.notifyFlow(srcHost, srcPort, trgHost, trgPort, this, trafficBytes)
+      }
+    }
+
+    for ((pid, pieceId) <- pidToPieceIds) {
       logDebug(s"Reading piece $pieceId of $broadcastId")
       // First try getLocalBytes because there is a chance that previous attempts to fetch the
       // broadcast blocks have already fetched some of the blocks. In that case, some blocks
@@ -133,7 +165,8 @@ private[spark] class TorrentBroadcast[T: ClassTag](obj: T, id: Long)
           blocks(pid) = block
           releaseLock(pieceId)
         case None =>
-          bm.getRemoteBytes(pieceId) match {
+          val location = locationsByPieceId(pieceId)
+          bm.getRemoteBytes(pieceId, Some(location)) match {
             case Some(b) =>
               // We found the block from remote executors/driver's BlockManager, so put the block
               // in this executor's BlockManager.

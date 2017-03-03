@@ -91,9 +91,9 @@ private[spark] class NettyBlockTransferService(
                             blockIds: Array[String],
                             listener: BlockFetchingListener): Unit = {
     logTrace(s"Fetch blocks from $host:$srcPort (executor id $execId)")
-    val estimateMaxBlockSizeBytes = 4000000
-    PaneClientManager.notifyFlow(host, srcPort, hostName, port, this,
-      estimateMaxBlockSizeBytes * blockIds.length)
+//    val estimateMaxBlockSizeBytes = 4000000
+//    PaneClientManager.notifyFlow(host, srcPort, hostName, port, this,
+//      estimateMaxBlockSizeBytes * blockIds.length)
 
     try {
       val blockFetchStarter = new RetryingBlockFetcher.BlockFetchStarter {
