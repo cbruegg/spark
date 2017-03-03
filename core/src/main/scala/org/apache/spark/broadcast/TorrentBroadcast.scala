@@ -132,14 +132,11 @@ private[spark] class TorrentBroadcast[T: ClassTag](obj: T, id: Long)
       val locations = bm.getLocations(pieceId).toList
 
       estimatedTrafficBytesByBlockManagerId(locations.head) += 4000000L
-      pidToPieceIds.+=:((pid, pieceId))
+      pidToPieceIds += ((pid, pieceId))
       locationsByPieceId(pieceId) = locations
     }
 
-    val usesNetty = bm.blockTransferService match {
-      case _: NettyBlockTransferService => true
-      case _ => false
-    }
+    val usesNetty = bm.blockTransferService.isInstanceOf[NettyBlockTransferService]
 
     if (usesNetty) {
       for ((location, trafficBytes) <- estimatedTrafficBytesByBlockManagerId) {
