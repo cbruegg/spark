@@ -27,7 +27,6 @@ import paneclient._
 object PaneClientManager {
 
   private var paneClient: PaneClient = null
-  private var rootShare: PaneShare = null
   private val MIN_BYTES = 1000
   private val shares = new AtomicInteger(0)
   private val GOAL_FINISH_TRANSFER_MS = 500
@@ -38,9 +37,6 @@ object PaneClientManager {
       val port = System.getProperty("pane_port", "4242").toInt
       paneClient = new PaneClientImpl(InetAddress.getByName(hostName), port)
       paneClient.authenticate("username")
-
-      rootShare = new PaneShare("rootShare", Int.MaxValue, null)
-      rootShare.setClient(paneClient)
     }
 
     paneClient
@@ -88,8 +84,15 @@ object PaneClientManager {
       end.setRelativeTime(GOAL_FINISH_TRANSFER_MS * 2)
       val reservation = new PaneReservation(bandwidthMegaBytesPerSec.toInt, flowGroup, start, end)
 
-      obtainPaneClient()
-      rootShare.reserve(reservation)
+      try {
+        val testShare = new PaneShare("test" + shares.getAndIncrement(), 10, flowGroup)
+        obtainPaneClient().getRootShare.newShare(testShare)
+        logging.logInfo("PANE share successfully created.")
+      } catch {
+        case t: Throwable => logging.logInfo("Couldn't create PANE share", t)
+      }
+
+      obtainPaneClient().getRootShare.reserve(reservation)
       logging.logInfo(s"PANE reservation complete: ($srcHost:$srcPort-$trgHost:$trgPort" +
         s"-$bandwidthMegaBytesPerSec)")
     } catch {
