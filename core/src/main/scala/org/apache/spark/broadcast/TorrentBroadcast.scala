@@ -125,7 +125,8 @@ private[spark] class TorrentBroadcast[T: ClassTag](obj: T, id: Long)
 
     val locationsByPieceId = collection.mutable.Map[BroadcastBlockId, List[BlockManagerId]]()
     val pidToPieceIds = collection.mutable.MutableList[(Int, BroadcastBlockId)]()
-    val estimatedTrafficBytesByBlockManagerId = collection.mutable.Map[BlockManagerId, Long]()
+    val estimatedTrafficBytesByBlockManagerId =
+      collection.mutable.Map[BlockManagerId, Long]().withDefaultValue(0)
 
     for (pid <- Random.shuffle(Seq.range(0, numBlocks))) {
       val pieceId = BroadcastBlockId(id, "piece" + pid)
