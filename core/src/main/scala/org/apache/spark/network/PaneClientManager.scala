@@ -26,11 +26,12 @@ import paneclient._
 object PaneClientManager {
 
   private var paneClient: PaneClient = null
-  private val MIN_BYTES = 1000000
   private val GOAL_FINISH_TRANSFER_MS = 500
+  private var minFlowBytes = 10000000
 
   private def obtainPaneClient(): PaneClient = synchronized {
     if (paneClient == null) {
+      minFlowBytes = System.getProperty("pane_min_flow_bytes", minFlowBytes.toString).toInt
       val hostName = System.getProperty("pane_hostname")
       val port = System.getProperty("pane_port", "4242").toInt
       paneClient = new PaneClientImpl(InetAddress.getByName(hostName), port)
@@ -50,7 +51,7 @@ object PaneClientManager {
   def notifyFlow(srcHost: InetAddress, srcPort: Int,
                  trgHost: InetAddress, trgPort: Int,
                  logging: Logging, bytes: Long): Unit = {
-    if (bytes < MIN_BYTES) {
+    if (bytes < minFlowBytes) {
       return
     }
 
