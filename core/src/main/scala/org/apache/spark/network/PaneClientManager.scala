@@ -26,8 +26,7 @@ import paneclient._
 object PaneClientManager {
 
   private var paneClient: PaneClient = null
-  private val MIN_BYTES = 1000
-  private val shares = new AtomicInteger(0)
+  private val MIN_BYTES = 10000
   private val GOAL_FINISH_TRANSFER_MS = 500
 
   private def obtainPaneClient(): PaneClient = synchronized {
@@ -65,7 +64,13 @@ object PaneClientManager {
       return
     }
 
-    val bandwidthMbytesPS = (bytes * 1000 /* ms */ / GOAL_FINISH_TRANSFER_MS) / 1000000
+    val defaultBandWidthMbytesPS = (bytes * 1000 /* ms */ / GOAL_FINISH_TRANSFER_MS) / 1000000
+    val bandwidthMbytesPS = try {
+      System.getProperty("pane_bandwidth_reservation_mbytesps", defaultBandWidthMbytesPS.toString)
+    } catch {
+      case _: Exception => defaultBandWidthMbytesPS
+    }
+
     try {
       val flowGroup = new PaneFlowGroup
       flowGroup.setSrcHost(srcHost)
