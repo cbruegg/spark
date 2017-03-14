@@ -26,7 +26,7 @@ import paneclient._
 object PaneClientManager {
 
   private var paneClient: PaneClient = null
-  private val MIN_BYTES = 10000
+  private val MIN_BYTES = 1000000
   private val GOAL_FINISH_TRANSFER_MS = 500
 
   private def obtainPaneClient(): PaneClient = synchronized {
