@@ -65,8 +65,9 @@ object PaneClientManager {
     }
 
     val defaultBandWidthMbytesPS = (bytes * 1000 /* ms */ / GOAL_FINISH_TRANSFER_MS) / 1000000
-    val bandwidthMbytesPS = try {
+    val bandwidthMbytesPS: Long = try {
       System.getProperty("pane_bandwidth_reservation_mbytesps", defaultBandWidthMbytesPS.toString)
+        .toLong
     } catch {
       case _: Exception => defaultBandWidthMbytesPS
     }
