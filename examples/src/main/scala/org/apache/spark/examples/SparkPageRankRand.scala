@@ -67,7 +67,7 @@ object SparkPageRankRand {
     import spark.implicits._
 
     val lineCount = args(0).toInt
-    val rand = new Random
+    val rand = new Random(0)
     val lines = spark.createDataset(
       (0 until lineCount)
         .map(_ => s"${rand.nextInt(lineCount)} ${rand.nextInt(lineCount)}}")
